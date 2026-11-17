@@ -2,6 +2,7 @@ package com.jk.book_tracker.features.scanner
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +40,7 @@ import androidx.navigation.NavController
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.jk.book_tracker.features.common.LockScreenOrientation
 import com.jk.book_tracker.utils.popBackStackIfCurrent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,6 +121,9 @@ private fun CameraPreview(navController: NavController) {
             }
         }
     }
+
+    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
