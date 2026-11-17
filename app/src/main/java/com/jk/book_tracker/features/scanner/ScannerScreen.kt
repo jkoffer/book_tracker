@@ -11,7 +11,15 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -31,9 +39,9 @@ import androidx.navigation.NavController
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
+import com.jk.book_tracker.utils.popBackStackIfCurrent
 
-// TODO: Improve ui.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScannerScreen(navController: NavController) {
     val context = LocalContext.current
@@ -57,13 +65,33 @@ fun ScannerScreen(navController: NavController) {
         }
     }
 
-    if (hasCameraPermission) {
-        CameraPreview(navController = navController)
-    } else {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Camera permission is required to scan barcodes.")
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(
+                        onClick = {
+                            navController.popBackStackIfCurrent("scanner")
+                        }
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                title = {}
+            )
+        },
+        content = { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                if (hasCameraPermission) {
+                    CameraPreview(navController = navController)
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Camera permission is required to scan barcodes.")
+                    }
+                }
+            }
         }
-    }
+    )
 }
 
 
@@ -91,24 +119,29 @@ private fun CameraPreview(navController: NavController) {
             }
         }
     }
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { context ->
+                PreviewView(context).apply {
+                    scaleType = PreviewView.ScaleType.FILL_CENTER
+                    implementationMode =
+                        PreviewView.ImplementationMode.COMPATIBLE
 
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { context ->
-            PreviewView(context).apply {
-                scaleType = PreviewView.ScaleType.FILL_CENTER
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-
-                controller = cameraController
+                    controller = cameraController
+                }
             }
-        }
-    )
+        )
+
+        ScannerVisualEffect()
+    }
 }
 
 @Composable
 private fun rememberBarcodeScanner() = remember {
     val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_EAN_13)
         .build()
 
     BarcodeScanning.getClient(options)
