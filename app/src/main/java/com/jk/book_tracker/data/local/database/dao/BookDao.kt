@@ -21,12 +21,8 @@ interface BookDao {
     @Upsert
     suspend fun insertBook(book: BookEntity)
 
-    @Transaction
-    suspend fun insertBooks(books: List<BookEntity>) {
-        books.forEach {
-            insertBook(it)
-        }
-    }
+    @Upsert
+    suspend fun insertBooks(books: List<BookEntity>)
 
     @Query("DELETE FROM books WHERE id = :id")
     suspend fun deleteBook(id: String)
