@@ -34,59 +34,51 @@ class BookRepository @Inject constructor(
     }
 
     suspend fun addBookWithTags(bookWithTags: BookWithTags) {
+        val crossRefs = bookWithTags.tags.map { tag ->
+            BookTagCrossRefEntity(
+                bookId = bookWithTags.book.id,
+                tagId = tag.id
+            )
+        }
+
         db.withWriteTransaction {
             bookDao.insertBook(bookWithTags.book)
 
-            // Clear & Re-insert tags
+            // Clear all tags of this book
             bookTagDao.deleteAllTagsFromBook(bookWithTags.book.id)
 
-            bookWithTags.tags.forEach { tag ->
-                bookTagDao.addTagToBook(
-                    BookTagCrossRefEntity(
-                        bookId = bookWithTags.book.id,
-                        tagId = tag.id
-                    )
-                )
+            // Insert new tags (if any)
+            if (crossRefs.isNotEmpty()) {
+                bookTagDao.addTagsToBooks(crossRefs)
             }
         }
     }
 
     suspend fun addBooksWithTags(bookWithTags: List<BookWithTags>) {
+        val books = bookWithTags.map { it.book }
+        val bookIds = bookWithTags.map { it.book.id }
+        val crossRefs = bookWithTags.flatMap { item ->
+            item.tags.map { tag ->
+                BookTagCrossRefEntity(
+                    bookId = item.book.id,
+                    tagId = tag.id
+                )
+            }
+        }
+
         db.withWriteTransaction {
-            bookWithTags.forEach { bookWithTags ->
-                bookDao.insertBook(bookWithTags.book)
+            bookDao.insertBooks(books)
 
-                // Clear & Re-insert tags
-                bookTagDao.deleteAllTagsFromBook(bookWithTags.book.id)
+            bookTagDao.deleteAllTagsFromBooks(bookIds)
 
-                bookWithTags.tags.forEach { tag ->
-                    bookTagDao.addTagToBook(
-                        BookTagCrossRefEntity(
-                            bookId = bookWithTags.book.id,
-                            tagId = tag.id
-                        )
-                    )
-                }
+            if (crossRefs.isNotEmpty()) {
+                bookTagDao.addTagsToBooks(crossRefs)
             }
         }
     }
 
-    suspend fun deleteBookWithTags(
-        bookId: String,
-        tagIds: List<String>
-    ) {
-        db.withWriteTransaction {
-            bookDao.deleteBook(bookId)
-
-            tagIds.forEach {
-                bookTagDao.deleteTagFromBook(
-                    BookTagCrossRefEntity(
-                        bookId = bookId,
-                        tagId = it
-                    )
-                )
-            }
-        }
+    suspend fun deleteBookWithTags(bookId: String) {
+        bookDao.deleteBook(bookId)
     }
 
     suspend fun findBookByIsbn(isbn: String): BookWithTags? {

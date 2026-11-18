@@ -25,9 +25,9 @@ class BookViewModel @Inject constructor(
         return repository.getBookWithTags(id)
     }
 
-    fun deleteBook(bookId: String, tagIds: List<String>) {
+    fun deleteBook(bookId: String) {
         viewModelScope.launch {
-            repository.deleteBookWithTags(bookId, tagIds)
+            repository.deleteBookWithTags(bookId)
         }
     }
 }

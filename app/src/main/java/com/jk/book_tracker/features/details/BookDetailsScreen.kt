@@ -84,10 +84,7 @@ fun SharedTransitionScope.BookDetailsScreen(
         book = book!!,
         navController = navController,
         onDelete = {
-            bookViewModel.deleteBook(
-                book!!.book.id,
-                tagIds = book!!.tags.map { it.id }
-            )
+            bookViewModel.deleteBook(book!!.book.id)
 
             navController.popBackStackIfCurrent("book-details")
         }
